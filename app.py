@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
 import requests
 import os
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 # 🔑 Pega as variáveis de ambiente do Render
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -38,4 +40,5 @@ def chat():
 @app.route("/")
 def home():
     return "✅ API do ChatGPT-PCGE está funcionando!"
+
 
