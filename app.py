@@ -1,38 +1,41 @@
-import os
 from flask import Flask, request, jsonify
-from flask_cors import CORS
 import requests
+import os
 
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 app = Flask(__name__)
-CORS(app)  # permite que o front acesse de outro domínio
 
-@app.get("/")
-def health():
-    return "OK", 200
+# Pega as variáveis de ambiente do Render
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT", "Você é o ChatGPT-PCGE. Responda em português de forma clara, objetiva e útil.")
 
-@app.post("/api/chat")
+@app.route("/api/chat", methods=["POST"])
 def chat():
-    data = request.get_json(force=True)
-    user_msg = (data or {}).get("message", "").strip()
-    if not user_msg:
-        return jsonify({"error": "Mensagem vazia"}), 400
+    data = request.get_json()
+    user_message = data.get("message", "")
 
-    r = requests.post(
-        "https://api.openai.com/v1/chat/completions",
-        headers={
-            "Authorization": f"Bearer {OPENAI_API_KEY}",
-            "Content-Type": "application/json",
-        },
-        json={
-            "model": "gpt-4o-mini",
-            "messages": [
-                {"role": "system", "content": "Você é o assistente 'ChatGPT - PCGE'."},
-                {"role": "user", "content": user_msg}
-            ],
-        },
-        timeout=60
-    )
-    r.raise_for_status()
-    reply = r.json()["choices"][0]["message"]["content"]
-    return jsonify({"reply": reply})
+    headers = {
+        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "model": MODEL,
+        "messages": [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_message}
+        ]
+    }
+
+    response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+
+    if response.status_code == 200:
+        reply = response.json()["choices"][0]["message"]["content"]
+        return jsonify({"reply": reply})
+    else:
+        return jsonify({"error": response.text}), response.status_code
+
+@app.route("/")
+def home():
+    return "API do ChatGPT-PCGE funcionando!"
+
