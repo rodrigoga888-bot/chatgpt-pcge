@@ -1,199 +1,175 @@
-   <!DOCTYPE html>
+  <!doctype html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatGPT - PCGE</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f7fa;
-            margin: 0;
-            padding: 0;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ChatGPT - PCGE</title>
+  <style>
+    :root{
+      --azul-escuro:#083050;
+      --laranja:#F6871F;
+      --azul-petroleo:#006F8A;
+      --cinza:#6D6E71;
+      --bg:#f9fafb;
+      --bubble-bot:#eef2f7;
+      --bubble-user:#006F8A;
+    }
 
-        header {
-            background-color: #083050;
-            color: white;
-            display: flex;
-            align-items: center;
-            padding: 12px;
-        }
+    *{box-sizing:border-box}
+    body{
+      margin:0;background:var(--bg);color:#222;
+      font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial;
+      display:flex;flex-direction:column;min-height:100vh
+    }
 
-        header img {
-            height: 55px;
-            margin-right: 15px;
-        }
+    .container{max-width:1000px;margin:0 auto;padding:0 16px}
 
-        header div {
-            display: flex;
-            flex-direction: column;
-        }
+    /* -------- HEADER QUE VOCÊ CURTIU -------- */
+    header.header{
+      background:var(--azul-escuro);color:#fff;
+      box-shadow:0 4px 18px rgba(0,0,0,.14);
+    }
+    .header-inner{
+      display:flex;align-items:center;justify-content:center;
+      gap:16px;padding:14px 0;
+    }
+    .logo{
+      height:64px;width:auto;display:block;flex:0 0 auto;
+    }
+    .brand{ text-align:left; line-height:1.2 }
+    .brand h1{
+      margin:0; font-size:26px; 
+      /* <- aqui o ajuste: antes estava bold; agora semibold leve */
+      font-weight:500; 
+      letter-spacing:.2px
+    }
+    .brand p{
+      margin:2px 0 0 0;font-size:16px;opacity:.9
+    }
 
-        header div .titulo {
-            font-size: 1.4em;
-            font-weight: 500; /* semibold elegante */
-        }
+    /* -------- HERO (faixa de boas-vindas) -------- */
+    .hero{
+      background:linear-gradient(135deg,#083050 0%,#006F8A 60%,#0a7aa6 100%);
+      color:#fff;border-radius:14px;padding:22px;margin:18px 0;
+      box-shadow:0 10px 28px rgba(0,0,0,.10);text-align:center
+    }
+    .hero h2{margin:0 0 6px;font-size:24px;font-weight:700}
+    .hero p{margin:0;font-size:16px;opacity:.97}
 
-        header div .subtitulo {
-            font-size: 0.9em;
-            font-style: italic;
-            color: #dcdcdc;
-        }
+    /* -------- CARD DO CHAT -------- */
+    .card{background:#fff;border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.06);padding:16px}
+    #chat{
+      height:480px;overflow:auto;padding:10px;border:1px solid #e5e7eb;
+      border-radius:12px;background:#fff
+    }
+    .message{max-width:80%;padding:10px 12px;border-radius:12px;margin:8px 0;line-height:1.45;font-size:15px}
+    .user{background:var(--bubble-user);color:#fff;margin-left:auto;border-top-right-radius:4px}
+    .bot{background:var(--bubble-bot);color:#111827;margin-right:auto;border-top-left-radius:4px}
+    .typing{font-size:12px;color:#6b7280;margin:6px 4px;display:none}
 
-        main {
-            max-width: 900px;
-            margin: 20px auto;
-            padding: 20px;
-        }
+    .inputbar{display:flex;gap:8px;margin-top:12px}
+    .inputbar input{
+      flex:1;padding:12px;border:1px solid #e5e7eb;border-radius:10px;outline:none
+    }
+    .inputbar button{
+      padding:12px 18px;border:none;border-radius:10px;background:var(--laranja);color:#fff;cursor:pointer;font-weight:600
+    }
+    .inputbar button:hover{background:#d46f0f}
 
-        .intro {
-            background: #006F8A;
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
+    footer{
+      margin-top:auto;background:var(--azul-escuro);color:#fff;text-align:center;
+      padding:14px;font-size:12px
+    }
 
-        .chat-box {
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            padding: 15px;
-            background: white;
-            height: 400px;
-            overflow-y: auto;
-            margin-bottom: 15px;
-        }
-
-        .msg {
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 8px;
-            max-width: 75%;
-            word-wrap: break-word;
-        }
-
-        .user {
-            background: #d1e7ff;
-            margin-left: auto;
-        }
-
-        .bot {
-            background: #f1f1f1;
-            margin-right: auto;
-        }
-
-        .input-area {
-            display: flex;
-            gap: 10px;
-        }
-
-        .input-area input {
-            flex: 1;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-        }
-
-        .input-area button {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 8px;
-            background: #F6871F;
-            color: white;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .input-area button:hover {
-            background: #e0761a;
-        }
-
-        /* Ajuste automático para celular */
-        @media (max-width: 600px) {
-            main {
-                padding: 10px;
-            }
-            header {
-                flex-direction: column;
-                text-align: center;
-            }
-            header img {
-                margin: 0 0 10px 0;
-            }
-            .chat-box {
-                height: 300px;
-            }
-        }
-    </style>
+    /* -------- RESPONSIVO -------- */
+    @media (max-width:700px){
+      .header-inner{flex-direction:column;gap:8px;padding:12px 0}
+      .logo{height:48px}
+      .brand{ text-align:center }
+      .brand h1{font-size:20px}
+      .brand p{font-size:14px}
+      .hero h2{font-size:20px}
+      .hero p{font-size:14px}
+      #chat{height:60vh}
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <img src="logo_pcge.png" alt="Logo PCGE">
-        <div>
-            <div class="titulo">Programa Ciência e Gestão pela Educação</div>
-            <div class="subtitulo">Assistente “ChatGPT – PCGE”</div>
-        </div>
-    </header>
+  <!-- HEADER (logo + título + subtítulo) -->
+  <header class="header">
+    <div class="container header-inner">
+      <img src="logo_pcge.png" alt="Logo PCGE" class="logo">
+      <div class="brand">
+        <h1>Programa Ciência e Gestão pela Educação</h1>
+        <p>Assistente <strong>“ChatGPT – PCGE”</strong></p>
+      </div>
+    </div>
+  </header>
 
-    <main>
-        <div class="intro">
-            <h2>Bem-vindo ao ChatGPT – PCGE</h2>
-            <p>Tire suas dúvidas em linguagem simples. Escreva sua pergunta e clique em Enviar.</p>
-        </div>
+  <main class="container">
+    <section class="hero">
+      <h2>Bem-vindo ao ChatGPT – PCGE</h2>
+      <p>Tire suas dúvidas em linguagem simples. Escreva sua pergunta e clique em Enviar.</p>
+    </section>
 
-        <div class="chat-box" id="chat-box">
-            <div class="msg bot">Olá! Sou o ChatGPT–PCGE. Estou aqui para ajudá-lo(a). Faça sua pergunta quando quiser.</div>
-        </div>
+    <section class="card">
+      <div id="chat"></div>
+      <div id="typing" class="typing">digitando…</div>
+      <div class="inputbar">
+        <input id="msg" type="text" placeholder="Digite sua pergunta..." />
+        <button id="send">Enviar</button>
+      </div>
+    </section>
+  </main>
 
-        <div class="input-area">
-            <input type="text" id="user-input" placeholder="Digite sua pergunta...">
-            <button onclick="sendMessage()">Enviar</button>
-        </div>
-    </main>
+  <footer>
+    © PCGE • Assistente experimental. Para decisões oficiais, consulte os documentos do Programa.
+  </footer>
 
-    <script>
-        async function sendMessage() {
-            const input = document.getElementById("user-input");
-            const message = input.value.trim();
-            if (!message) return;
+  <script>
+    const API_URL = "https://chatgpt-pcge.onrender.com/api/chat";
 
-            const chatBox = document.getElementById("chat-box");
+    const chat = document.getElementById("chat");
+    const msg  = document.getElementById("msg");
+    const btn  = document.getElementById("send");
+    const typing = document.getElementById("typing");
 
-            // Mostrar mensagem do usuário
-            const userMsg = document.createElement("div");
-            userMsg.className = "msg user";
-            userMsg.innerText = message;
-            chatBox.appendChild(userMsg);
+    function add(text, who){
+      const b = document.createElement("div");
+      b.className = "message " + who;
+      b.textContent = text;
+      chat.appendChild(b);
+      chat.scrollTop = chat.scrollHeight;
+    }
 
-            input.value = "";
-            chatBox.scrollTop = chatBox.scrollHeight;
+    async function send(){
+      const text = msg.value.trim();
+      if(!text) return;
+      add(text, "user");
+      msg.value = "";
 
-            try {
-                const response = await fetch("https://chatgpt-pcge.onrender.com/api/chat", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ message })
-                });
+      typing.style.display = "block";
+      try{
+        const r = await fetch(API_URL, {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({ message:text })
+        });
+        const data = await r.json();
+        add(data.reply || "(sem resposta)", "bot");
+      }catch(e){
+        add("Erro de conexão com o servidor.", "bot");
+      }finally{
+        typing.style.display = "none";
+      }
+    }
 
-                const data = await response.json();
+    btn.onclick = send;
+    msg.addEventListener("keydown", e => { if(e.key==="Enter") send(); });
 
-                // Mostrar resposta do bot
-                const botMsg = document.createElement("div");
-                botMsg.className = "msg bot";
-                botMsg.innerText = data.reply || "Erro ao obter resposta.";
-                chatBox.appendChild(botMsg);
-                chatBox.scrollTop = chatBox.scrollHeight;
-
-            } catch (error) {
-                const errorMsg = document.createElement("div");
-                errorMsg.className = "msg bot";
-                errorMsg.innerText = "Erro de conexão com o servidor.";
-                chatBox.appendChild(errorMsg);
-            }
-        }
-    </script>
+    // Mensagem inicial
+    add("Olá! Sou o ChatGPT–PCGE. Estou aqui para ajudá-lo(a). Faça sua pergunta quando quiser.", "bot");
+  </script>
 </body>
 </html>
 
