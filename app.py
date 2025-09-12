@@ -4,10 +4,10 @@ import os
 
 app = Flask(__name__)
 
-# Pega as variáveis de ambiente do Render
+# 🔑 Pega as variáveis de ambiente do Render
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT", "Você é o ChatGPT-PCGE. Responda em português de forma clara, objetiva e útil.")
+MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")  # você pode trocar no Render
+SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT", "Você é o ChatGPT-PCGE. Responda sempre em português de forma clara, objetiva e útil.")
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
@@ -37,5 +37,5 @@ def chat():
 
 @app.route("/")
 def home():
-    return "API do ChatGPT-PCGE funcionando!"
+    return "✅ API do ChatGPT-PCGE está funcionando!"
 
