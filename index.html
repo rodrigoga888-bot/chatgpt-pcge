@@ -16,20 +16,18 @@
     }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--cinza);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;display:flex;flex-direction:column;min-height:100vh}
-    header{background:var(--azul-escuro);color:#fff}
-    .container{max-width:960px;margin:0 auto;padding:16px}
-    .top{display:flex;align-items:center;gap:12px;padding:6px 0}
-    .top img{height:40px;width:auto}
-    .brand-title{font-weight:700}
-    .brand-sub{font-size:12px;opacity:.9}
+    header{background:var(--azul-escuro);color:#fff;padding:20px 0;text-align:center}
+    .brand-title{font-weight:700;font-size:28px}
+    .brand-sub{font-size:18px;margin-top:6px;opacity:.9}
+    .top img{height:80px;width:auto;display:block;margin:0 auto 12px}
 
     .hero{
       background:linear-gradient(135deg,#083050 0%,#006F8A 60%,#0a7aa6 100%);
-      color:#fff;border-radius:14px;padding:20px;margin:16px 0;
-      box-shadow:0 8px 24px rgba(0,0,0,.08)
+      color:#fff;border-radius:14px;padding:24px;margin:16px 0;
+      box-shadow:0 8px 24px rgba(0,0,0,.08);text-align:center
     }
-    .hero h1{margin:0 0 6px;font-size:22px}
-    .hero p{margin:0;opacity:.95}
+    .hero h1{margin:0 0 6px;font-size:26px}
+    .hero p{margin:0;font-size:16px;opacity:.95}
 
     .card{background:#fff;border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.06);padding:16px}
     #chat{height:480px;overflow:auto;padding:10px;border:1px solid #e5e7eb;border-radius:12px;background:#fff}
@@ -54,14 +52,12 @@
 </head>
 <body>
   <header>
-    <div class="container">
-      <div class="top">
-        <!-- TROQUE LOGO.png pelo nome do seu arquivo ou uma URL pública da imagem -->
-        <img src="logo_pcge.png" alt="PCGE" onerror="this.style.display='none'">
-        <div>
-          <div class="brand-title">Programa Ciência e Gestão pela Educação</div>
-          <div class="brand-sub">Assistente “ChatGPT – PCGE”</div>
-        </div>
+    <div class="container top">
+      <!-- Troque pelo nome real da sua logo ou URL pública -->
+      <img src="pcge-logo-negativa.png" alt="PCGE">
+      <div>
+        <div class="brand-title">Programa Ciência e Gestão pela Educação</div>
+        <div class="brand-sub">Assistente “ChatGPT – PCGE”</div>
       </div>
     </div>
   </header>
@@ -69,7 +65,7 @@
   <main class="container">
     <section class="hero">
       <h1>Bem-vindo ao ChatGPT – PCGE</h1>
-      <p>Tire dúvidas em linguagem simples. Escreva sua pergunta e clique em Enviar.</p>
+      <p>Tire suas dúvidas em linguagem simples. Escreva sua pergunta e clique em Enviar.</p>
     </section>
 
     <section class="card">
@@ -87,7 +83,6 @@
   </footer>
 
   <script>
-    // 🔗 seu backend no Render:
     const API_URL = "https://chatgpt-pcge.onrender.com/api/chat";
 
     const chat = document.getElementById("chat");
@@ -128,11 +123,12 @@
     btn.onclick = send;
     msg.addEventListener("keydown", e => { if(e.key==="Enter") send(); });
 
-    // Mensagem inicial
-    add("Olá! Sou o ChatGPT–PCGE. Faça sua pergunta quando quiser.", "bot");
+    // Mensagem inicial do bot
+    add("Olá! Sou o ChatGPT–PCGE. Estou aqui para ajudá-lo(a). Faça sua pergunta quando quiser.", "bot");
   </script>
 </body>
 </html>
+
 
 
 
