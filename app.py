@@ -20,8 +20,8 @@ OPENAI_EMBED_URL = "https://api.openai.com/v1/embeddings"
 DOCS_DIR = os.environ.get("DOCS_DIR", "docs")
 CHUNK_CHARS = 1800
 CHUNK_OVERLAP = 200
-TOP_K = 6
-SCORE_THRESHOLD = 0.55   # ou 0.50 se quiser ainda mais tolerante
+TOP_K = 12                # mais trechos
+SCORE_THRESHOLD = 0.50    # mais tolerante
 STRICT_MODE = True
 
 index = []
@@ -35,7 +35,7 @@ def clean_text(t: str) -> str:
 def load_docs() -> list[dict]:
     docs = []
     for path in glob.glob(os.path.join(DOCS_DIR, "*")):
-        if path.lower().endswith((".txt", ".md")):
+        if path.lower().endswith((".txt", ".md")) and not path.lower().startswith("readme"):
             with open(path, "r", encoding="utf-8", errors="ignore") as f:
                 text = clean_text(f.read())
                 docs.append({"source": os.path.basename(path), "text": text})
@@ -103,10 +103,9 @@ def build_context(query: str):
         filtered = [h for h in hits if h["score"] >= SCORE_THRESHOLD]
         if filtered:
             return filtered
-        # Fallback: se nada passou do threshold, use os 3 melhores mesmo assim
+        # fallback: se nada passou, pega os 3 melhores
         return hits[:3]
     return hits
-
 
 SYSTEM_PROMPT = (
     "Você é um assistente do Programa Ciência e Gestão pela Educação (PCGE). "
@@ -173,12 +172,7 @@ def chat():
 
     try:
         reply = call_openai_chat(messages)
-        return jsonify({
-            "reply": reply,
-            "debug_context": [h["source"] for h in context_slices],
-            "debug_scores": [h["score"] for h in context_slices]
-        })
-
+        return jsonify({"reply": reply})
     except Exception as e:
         print("Erro OpenAI:", str(e))
         return jsonify({"reply": "Não consegui responder agora. Tente novamente em instantes."}), 200
@@ -191,9 +185,6 @@ def reindex():
     except Exception as e:
         return jsonify({"status": "error", "detail": str(e)}), 500
 
-# =========================
-#  Endpoint de DEBUG
-# =========================
 @app.route("/debug/search", methods=["GET"])
 def debug_search():
     q = request.args.get("q", "")
