@@ -68,6 +68,7 @@
       border-color:#cfd4da;background:#f8fafc;
     }
 
+    /* ===== Chat ===== */
     #chat{
       height:460px;overflow:auto;padding:10px;border:1px solid var(--borda);
       border-radius:12px;background:#fff
@@ -80,6 +81,15 @@
     .bot{background:var(--bubble-bot);color:#111827;margin-right:auto;border-top-left-radius:4px}
 
     .typing{font-size:12px;color:#6b7280;margin:6px 4px;display:none}
+
+    /* ===== Entrada por voz (apenas STT) ===== */
+    .voicebar{display:flex;gap:10px;align-items:center;margin:8px 0 12px}
+    .btn-mic{
+      padding:8px 12px;border:1px solid var(--borda);border-radius:10px;background:#fff;
+      cursor:pointer;font-weight:600
+    }
+    .btn-mic.active{background:#e6f4ea;border-color:#84d18a}
+    .small-hint{font-size:12px;color:#6b7280}
 
     .inputbar{display:flex;gap:10px;margin-top:12px}
     .inputbar input{
@@ -146,6 +156,13 @@
 
       <div id="chat"></div>
       <div id="typing" class="typing">digitando…</div>
+
+      <!-- Barra de voz: só entrada por voz (STT) -->
+      <div class="voicebar">
+        <button id="mic" class="btn-mic" type="button">🎤 Falar</button>
+        <span class="small-hint">Dica: funciona melhor no Chrome/Edge (Android/Windows).</span>
+      </div>
+
       <div class="inputbar">
         <input id="msg" type="text" placeholder="Digite sua pergunta..." autocomplete="off" />
         <button id="send">Enviar</button>
@@ -190,6 +207,7 @@
         add(data.reply || "(sem resposta)", "bot");
       }catch(e){
         add("Erro de conexão com o servidor.", "bot");
+        console.error(e);
       }finally{
         typing.style.display = "none";
       }
@@ -198,17 +216,82 @@
     btn.onclick = send;
     msg.addEventListener("keydown", e => { if(e.key==="Enter") send(); });
 
-    // Função para enviar sugestão
+    // Envia sugestão como mensagem
     function enviarSugestao(texto) {
       msg.value = texto;
       send();
     }
+
+    // ======== STT (fala -> texto) via Web Speech API ========
+    let rec = null;
+    let recActive = false;
+
+    function getRecognition(){
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if(!SR) return null;
+      const r = new SR();
+      r.lang = 'pt-BR';
+      r.interimResults = false;   // só resultado final
+      r.maxAlternatives = 1;
+      return r;
+    }
+
+    const micBtn = document.getElementById('mic');
+
+    function updateMicUI(active){
+      recActive = active;
+      micBtn?.classList.toggle('active', active);
+      if (micBtn) micBtn.textContent = active ? '🛑 Parar' : '🎤 Falar';
+    }
+
+    function startDictation(){
+      if(recActive){ // já está gravando -> parar
+        try{ rec && rec.stop(); }catch(_){}
+        updateMicUI(false);
+        return;
+      }
+
+      rec = getRecognition();
+      if(!rec){
+        alert('Seu navegador não suporta ditado por voz. Use Chrome ou Edge (Android/Windows). No iOS Safari, a entrada por voz do navegador não está disponível.');
+        return;
+      }
+
+      updateMicUI(true);
+
+      rec.onresult = (ev) => {
+        const transcript = ev.results[0][0].transcript;
+        if (msg) {
+          msg.value = transcript;
+          // envia automaticamente após reconhecer
+          send();
+        }
+      };
+
+      rec.onerror = (ev) => {
+        console.warn('STT erro:', ev.error || ev);
+        updateMicUI(false);
+      };
+
+      rec.onend = () => {
+        // encerrou (natural ou manual)
+        updateMicUI(false);
+      };
+
+      try { rec.start(); } catch(e) {
+        console.warn('Falha ao iniciar reconhecimento:', e);
+        updateMicUI(false);
+      }
+    }
+
+    micBtn?.addEventListener('click', startDictation);
 
     // Mensagem inicial
     add("Olá! Sou o ChatGPT–PCGE. Estou aqui para ajudá-lo(a). Faça sua pergunta quando quiser.", "bot");
   </script>
 </body>
 </html>
+
 
 
 
