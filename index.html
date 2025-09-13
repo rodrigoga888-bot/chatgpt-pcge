@@ -19,7 +19,47 @@
       --borda:#e5e7eb;
       --shadow:0 1px 2px rgba(0,0,0,.05);
       --shadow-card:0 10px 28px rgba(0,0,0,.06);
-    }
+    } /* === 1) Forçar tema CLARO em qualquer dispositivo (desliga dark mode do sistema) === */
+@media (prefers-color-scheme: dark){
+  :root{
+    /* força paleta clara */
+    color-scheme: light;
+    --bg:#f7f8fa;
+    --text:#111827;
+    --bubble-bot:#f3f6fb;
+    --bubble-user:#005a70;
+    --borda:#e5e7eb;
+  }
+  body, .card, #chat { background:#fff !important; color:#111827 !important; }
+}
+
+/* === 2) Texto do botão de microfone e estados === */
+.btn-mic{
+  color:#1f2937 !important;       /* texto escuro legível */
+  background:#fff !important;
+  border:1px solid var(--borda) !important;
+}
+.btn-mic.active{
+  background:#e6f4ea !important;
+  border-color:#84d18a !important;
+  color:#1f2937 !important;
+}
+
+/* === 3) Remover qualquer rolagem lateral no mobile === */
+html, body { max-width:100%; overflow-x:hidden; }
+.container{ max-width:1020px; width:100%; padding-left:16px; padding-right:16px; }
+section.card{ overflow-x:hidden; }
+
+/* garante que chips/sugestões quebrem linha e não “estourem” a largura */
+.sugestoes-inline{ flex-wrap:wrap; overflow-x:visible; }
+.chip{ max-width:100%; white-space:normal; }
+
+/* previne que o sticky/áreas seguras causem overflow em aparelhos com notch */
+.inputbar-wrapper{ overflow-x:hidden; }
+
+/* por via das dúvidas, qualquer elemento muito largo se ajusta */
+img, video, canvas{ max-width:100%; height:auto; display:block; }
+
     @media (prefers-color-scheme: dark){
       :root{
         --azul-escuro:#071b2b;
@@ -344,6 +384,7 @@
   </script>
 </body>
 </html>
+
 
 
 
