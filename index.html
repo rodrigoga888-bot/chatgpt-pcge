@@ -2,129 +2,174 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>ChatGPT - PCGE</title>
   <style>
+    /* ========= THEME (mobile-first) ========= */
     :root{
       --azul-escuro:#083050;
       --azul-petroleo:#006F8A;
       --laranja:#F6871F;
       --cinza:#6D6E71;
-      --bg:#f4f6f8;
-      --bubble-bot:#eef2f7;
-      --bubble-user:#006F8A;
+      --bg:#f7f8fa;
+      --text:#111827;
+      --bubble-bot:#f3f6fb;
+      --bubble-user:#005a70;
       --borda:#e5e7eb;
+      --shadow:0 1px 2px rgba(0,0,0,.05);
+      --shadow-card:0 10px 28px rgba(0,0,0,.06);
+    }
+    @media (prefers-color-scheme: dark){
+      :root{
+        --azul-escuro:#071b2b;
+        --azul-petroleo:#0b879b;
+        --laranja:#f39a3d;
+        --cinza:#9aa3ad;
+        --bg:#0c1117;
+        --text:#e8eef6;
+        --bubble-bot:#111827;
+        --bubble-user:#0d6c80;
+        --borda:#1f2937;
+        --shadow:0 1px 2px rgba(0,0,0,.25);
+        --shadow-card:0 10px 28px rgba(0,0,0,.25);
+      }
     }
 
+    /* ========= BASE ========= */
     *{box-sizing:border-box}
+    html, body{height:100%}
     body{
-      margin:0;background:var(--bg);color:#222;
+      margin:0;background:var(--bg);color:var(--text);
       font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial;
       display:flex;flex-direction:column;min-height:100vh
     }
+    .container{max-width:1020px;margin:0 auto;padding:0 16px}
 
-    .container{max-width:1020px;margin:0 auto;padding:0 20px}
-
-    header{
-      background:var(--azul-escuro);color:#fff;
-      box-shadow:0 4px 18px rgba(0,0,0,.14)
-    }
-    .header-inner{
-      display:flex;align-items:center;gap:16px;padding:12px 30px;
-    }
-    .logo{height:58px;width:auto;flex:0 0 auto}
+    header{background:var(--azul-escuro);color:#fff;box-shadow:0 4px 18px rgba(0,0,0,.14)}
+    .header-inner{display:flex;align-items:center;gap:12px;padding:12px 16px}
+    .logo{height:46px;width:auto;flex:0 0 auto}
     .brand{line-height:1.2}
-    .brand h1{margin:0;font-size:26px;font-weight:500;letter-spacing:.2px}
-    .brand p{margin:2px 0 0;font-size:15px;font-style:italic;opacity:.9}
+    .brand h1{margin:0;font-size:20px;font-weight:600;letter-spacing:.2px}
+    .brand p{margin:2px 0 0;font-size:13px;font-style:italic;opacity:.9}
 
-    main.container{padding:18px 20px}
+    main.container{padding:12px 16px}
 
     .hero{
       background:linear-gradient(135deg,#083050 0%,#006F8A 60%,#0a7aa6 100%);
-      color:#fff;border-radius:12px;padding:14px;margin:12px 0 18px;
-      text-align:center;box-shadow:0 10px 28px rgba(0,0,0,.08)
+      color:#fff;border-radius:12px;padding:14px;margin:10px 0 14px;
+      text-align:center;box-shadow:var(--shadow-card)
     }
-    .hero h2{margin:0 0 6px;font-size:22px;font-weight:700}
-    .hero p{margin:0;font-size:15px;opacity:.97}
+    .hero h2{margin:0 0 6px;font-size:18px;font-weight:700}
+    .hero p{margin:0;font-size:14px;opacity:.95}
 
-    .card{
-      background:#fff;border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.06);padding:16px
-    }
+    .card{background:#fff;border-radius:14px;box-shadow:var(--shadow-card);padding:12px}
+    @media (prefers-color-scheme: dark){ .card{background:#0f1722} }
 
-    /* ===== Sugestões dentro do card ===== */
+    /* ========= SUGESTÕES ========= */
     .sugestoes-inline{
-      display:flex;flex-wrap:wrap;gap:8px;align-items:center;
-      margin:4px 2px 12px 2px;
+      display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 2px 10px
     }
-    .sugestoes-inline .label{
-      font-size:13px;font-weight:600;color:#2c3e50;margin-right:4px;
+    .sugestoes-inline .label{font-size:13px;font-weight:600;opacity:.9;margin-right:2px}
+    .chip{
+      padding:10px 12px;border:1px solid var(--borda);border-radius:999px;
+      background:transparent;color:var(--text);font-size:13px;cursor:pointer;
+      box-shadow:0 1px 2px rgba(0,0,0,.04); min-height:44px;
     }
-    .sugestoes-inline button{
-      padding:6px 10px;border:1px solid var(--borda);border-radius:999px;
-      background:#fff;color:#2c3e50;font-size:13px;cursor:pointer;
-      box-shadow:0 1px 2px rgba(0,0,0,.04);
-    }
-    .sugestoes-inline button:hover{
-      border-color:#cfd4da;background:#f8fafc;
+    .chip:hover{border-color:#cfd4da;background:rgba(0,0,0,.03)}
+    @media (prefers-color-scheme: dark){
+      .chip:hover{background:rgba(255,255,255,.06);border-color:#263141}
     }
 
-    /* ===== Chat ===== */
+    /* ========= CHAT ========= */
     #chat{
-      height:460px;overflow:auto;padding:10px;border:1px solid var(--borda);
-      border-radius:12px;background:#fff
+      height:52vh; overflow:auto; padding:10px; border:1px solid var(--borda);
+      border-radius:12px; background:#fff;
     }
+    @media (prefers-color-scheme: dark){ #chat{background:#0f1722} }
     .message{
-      max-width:80%;padding:10px 12px;border-radius:12px;margin:8px 0;
-      line-height:1.45;font-size:15px;word-break:break-word
+      width:100%; max-width:100%; padding:12px 14px; border-radius:12px; margin:8px 0;
+      line-height:1.5; font-size:15px; word-break:break-word; box-shadow:var(--shadow)
     }
-    .user{background:var(--bubble-user);color:#fff;margin-left:auto;border-top-right-radius:4px}
-    .bot{background:var(--bubble-bot);color:#111827;margin-right:auto;border-top-left-radius:4px}
+    .user{
+      background:var(--bubble-user); color:#fff; margin-left:0; margin-right:0;
+      border-top-right-radius:6px
+    }
+    .bot{
+      background:var(--bubble-bot); color:var(--text); margin-right:0; margin-left:0;
+      border-top-left-radius:6px
+    }
 
-    .typing{font-size:12px;color:#6b7280;margin:6px 4px;display:none}
+    /* No desktop, voltamos o layout “80%” para leitura ampla */
+    @media (min-width:900px){
+      .message{max-width:80%}
+      .user{margin-left:auto}
+      .bot{margin-right:auto}
+    }
 
-    /* ===== Entrada por voz (apenas STT) ===== */
-    .voicebar{display:flex;gap:10px;align-items:center;margin:8px 0 12px}
+    /* ========= TIPANDO… ========= */
+    .typing-bubble{
+      display:inline-flex;align-items:center;gap:6px;background:var(--bubble-bot);color:#475569;
+      padding:8px 10px;border-radius:12px;box-shadow:var(--shadow)
+    }
+    .typing-dots{display:inline-flex;gap:4px}
+    .typing-dots i{
+      width:6px;height:6px;border-radius:50%;background:#94a3b8;animation:blink 1.2s infinite ease-in-out
+    }
+    .typing-dots i:nth-child(2){animation-delay:.15s}
+    .typing-dots i:nth-child(3){animation-delay:.3s}
+    @keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+
+    /* ========= VOZ (STT) ========= */
+    .voicebar{display:flex;gap:10px;align-items:center;margin:8px 0 8px}
     .btn-mic{
-      padding:8px 12px;border:1px solid var(--borda);border-radius:10px;background:#fff;
-      cursor:pointer;font-weight:600
+      padding:10px 12px;border:1px solid var(--borda);border-radius:10px;background:transparent;
+      cursor:pointer;font-weight:600;min-height:44px
     }
     .btn-mic.active{background:#e6f4ea;border-color:#84d18a}
-    .small-hint{font-size:12px;color:#6b7280}
+    .small-hint{font-size:12px;opacity:.7}
 
-    .inputbar{display:flex;gap:10px;margin-top:12px}
+    /* ========= INPUT “STICKY” NO MOBILE ========= */
+    .inputbar-wrapper{
+      position:sticky; bottom:0; background:var(--bg);
+      padding-bottom:calc(env(safe-area-inset-bottom) + 8px); /* iPhone notch */
+    }
+    .inputbar{display:flex;gap:10px;margin-top:8px}
     .inputbar input{
-      flex:1;padding:12px;border:1px solid var(--borda);border-radius:10px;outline:none
+      flex:1;padding:14px;border:1px solid var(--borda);border-radius:12px;outline:none;
+      min-height:44px;font-size:16px;background:transparent;color:var(--text)
     }
     .inputbar button{
-      padding:12px 18px;border:none;border-radius:10px;background:var(--laranja);
-      color:#fff;cursor:pointer;font-weight:600
+      padding:12px 18px;border:none;border-radius:12px;background:var(--laranja);
+      color:#fff;cursor:pointer;font-weight:700;min-height:44px
     }
-    .inputbar button:hover{background:#d46f0f}
+    .inputbar button:hover{filter:brightness(.95)}
+
+    /* ========= AÇÕES ========= */
+    .actions-bar{display:flex;justify-content:flex-end;margin-top:8px}
+    .btn-clear{
+      padding:10px 12px;border:1px solid var(--borda);border-radius:10px;background:transparent;
+      color:var(--text);cursor:pointer;font-weight:600;min-height:44px
+    }
+    .btn-clear:hover{background:rgba(0,0,0,.04)}
+    @media (prefers-color-scheme: dark){ .btn-clear:hover{background:rgba(255,255,255,.06)} }
 
     footer{
       margin-top:auto;background:var(--azul-escuro);color:#fff;text-align:center;
-      padding:14px;font-size:12px
+      padding:14px calc(env(safe-area-inset-right) + 14px) calc(env(safe-area-inset-bottom) + 14px) calc(env(safe-area-inset-left) + 14px);
+      font-size:12px
     }
 
-    @media (max-width:820px){
-      .brand h1{font-size:22px}
-      .brand p{font-size:14px}
-    }
-    @media (max-width:640px){
-      .header-inner{gap:10px;padding:12px 18px}
-      .logo{height:50px}
-      .brand h1{font-size:20px}
-      .brand p{font-size:13px}
-      .hero h2{font-size:20px}
-      .hero p{font-size:14px}
-      #chat{height:58vh}
-    }
-    @media (max-width:480px){
-      .header-inner{flex-direction:column;align-items:center;text-align:center}
-      .logo{height:46px}
-      .brand h1{font-size:19px}
-      .brand p{font-size:13px}
-      .container{padding:0 14px}
+    /* ========= HEADERS maiores no desktop ========= */
+    @media (min-width:900px){
+      .header-inner{gap:16px;padding:12px 30px}
+      .logo{height:58px}
+      .brand h1{font-size:26px}
+      .brand p{font-size:15px}
+      .hero h2{font-size:22px}
+      .hero p{font-size:15px}
+      .container{padding:0 20px}
+      #chat{height:460px}
     }
   </style>
 </head>
@@ -142,30 +187,39 @@
   <main class="container">
     <section class="hero">
       <h2>Bem-vindo ao ChatGPT – PCGE</h2>
-      <p>Tire suas dúvidas em linguagem simples. Escreva sua pergunta e clique em Enviar.</p>
+      <p>Tire suas dúvidas em linguagem simples. Escreva ou fale sua pergunta e clique em Enviar.</p>
     </section>
 
     <section class="card">
-      <!-- SUGESTÕES (dentro do card) -->
+      <!-- Sugestões -->
       <div class="sugestoes-inline" aria-label="Sugestões de perguntas">
         <span class="label">Experimente perguntar:</span>
-        <button type="button" onclick="enviarSugestao('O que é o PCGE?')">O que é o PCGE?</button>
-        <button type="button" onclick="enviarSugestao('Como surgiu o Programa?')">Como surgiu o Programa?</button>
-        <button type="button" onclick="enviarSugestao('Qual a metodologia utilizada?')">Qual a metodologia utilizada?</button>
+        <button class="chip" type="button" onclick="enviarSugestao('O que é o PCGE?')">O que é o PCGE?</button>
+        <button class="chip" type="button" onclick="enviarSugestao('Como surgiu o Programa?')">Como surgiu o Programa?</button>
+        <button class="chip" type="button" onclick="enviarSugestao('Qual a metodologia utilizada?')">Qual a metodologia utilizada?</button>
       </div>
 
-      <div id="chat"></div>
-      <div id="typing" class="typing">digitando…</div>
+      <div id="chat" role="log" aria-live="polite"></div>
 
-      <!-- Barra de voz: só entrada por voz (STT) -->
+      <!-- bolha animada aparece/some via JS -->
+      <div id="typing" class="typing" aria-hidden="true"></div>
+
+      <!-- Voz (entrada) -->
       <div class="voicebar">
         <button id="mic" class="btn-mic" type="button">🎤 Falar</button>
-        <span class="small-hint">Dica: funciona melhor no Chrome/Edge (Android/Windows).</span>
+        <span class="small-hint">Dica: melhor no Chrome/Edge (Android/Windows).</span>
       </div>
 
-      <div class="inputbar">
-        <input id="msg" type="text" placeholder="Digite sua pergunta..." autocomplete="off" />
-        <button id="send">Enviar</button>
+      <!-- Input sticky no mobile -->
+      <div class="inputbar-wrapper">
+        <div class="inputbar">
+          <input id="msg" type="text" placeholder="Digite sua pergunta..." autocomplete="off" autofocus />
+          <button id="send">Enviar</button>
+        </div>
+
+        <div class="actions-bar">
+          <button id="clearChat" class="btn-clear" type="button" title="Limpar histórico (Alt+N)">Nova conversa</button>
+        </div>
       </div>
     </section>
   </main>
@@ -180,7 +234,6 @@
     const chat   = document.getElementById("chat");
     const msg    = document.getElementById("msg");
     const btn    = document.getElementById("send");
-    const typing = document.getElementById("typing");
 
     function add(text, who){
       const b = document.createElement("div");
@@ -190,13 +243,31 @@
       chat.scrollTop = chat.scrollHeight;
     }
 
+    // bolha "digitando..." animada
+    let typingNode = null;
+    function showTyping(){
+      if(typingNode) return;
+      typingNode = document.createElement("div");
+      typingNode.className = "message bot";
+      typingNode.innerHTML = `
+        <span class="typing-bubble">
+          <span>digitando</span>
+          <span class="typing-dots"><i></i><i></i><i></i></span>
+        </span>`;
+      chat.appendChild(typingNode);
+      chat.scrollTop = chat.scrollHeight;
+    }
+    function hideTyping(){
+      if(!typingNode) return;
+      typingNode.remove(); typingNode = null;
+    }
+
     async function send(){
       const text = msg.value.trim();
       if(!text) return;
       add(text, "user");
       msg.value = "";
-
-      typing.style.display = "block";
+      showTyping();
       try{
         const r = await fetch(API_URL, {
           method:"POST",
@@ -204,86 +275,68 @@
           body: JSON.stringify({ message:text })
         });
         const data = await r.json();
+        hideTyping();
         add(data.reply || "(sem resposta)", "bot");
       }catch(e){
+        hideTyping();
         add("Erro de conexão com o servidor.", "bot");
         console.error(e);
-      }finally{
-        typing.style.display = "none";
       }
     }
 
     btn.onclick = send;
-    msg.addEventListener("keydown", e => { if(e.key==="Enter") send(); });
+    msg.addEventListener("keydown", e => {
+      if(e.key === "Enter" && !e.ctrlKey && !e.shiftKey){ e.preventDefault(); send(); }
+      if(e.key === "Escape"){ msg.focus(); }
+    });
+    window.addEventListener('keydown', (e)=>{
+      if(e.altKey && (e.key === 'n' || e.key === 'N')){
+        e.preventDefault();
+        document.getElementById('clearChat')?.click();
+      }
+    });
 
-    // Envia sugestão como mensagem
-    function enviarSugestao(texto) {
-      msg.value = texto;
-      send();
-    }
+    // Sugestões
+    function enviarSugestao(texto){ msg.value = texto; send(); }
 
-    // ======== STT (fala -> texto) via Web Speech API ========
-    let rec = null;
-    let recActive = false;
+    // Nova conversa
+    document.getElementById('clearChat')?.addEventListener('click', () => {
+      chat.innerHTML = "";
+      add("Nova conversa iniciada. Como posso ajudar?", "bot");
+      msg.focus();
+    });
 
+    // ===== STT (fala -> texto) via Web Speech API =====
+    let rec = null, recActive = false;
     function getRecognition(){
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       if(!SR) return null;
       const r = new SR();
       r.lang = 'pt-BR';
-      r.interimResults = false;   // só resultado final
+      r.interimResults = false;
       r.maxAlternatives = 1;
       return r;
     }
-
     const micBtn = document.getElementById('mic');
-
     function updateMicUI(active){
       recActive = active;
       micBtn?.classList.toggle('active', active);
       if (micBtn) micBtn.textContent = active ? '🛑 Parar' : '🎤 Falar';
     }
-
     function startDictation(){
-      if(recActive){ // já está gravando -> parar
-        try{ rec && rec.stop(); }catch(_){}
-        updateMicUI(false);
-        return;
-      }
-
+      if(recActive){ try{ rec && rec.stop(); }catch(_){}
+        updateMicUI(false); return; }
       rec = getRecognition();
-      if(!rec){
-        alert('Seu navegador não suporta ditado por voz. Use Chrome ou Edge (Android/Windows). No iOS Safari, a entrada por voz do navegador não está disponível.');
-        return;
-      }
-
+      if(!rec){ alert('Seu navegador não suporta ditado por voz. Use Chrome ou Edge (Android/Windows).'); return; }
       updateMicUI(true);
-
       rec.onresult = (ev) => {
         const transcript = ev.results[0][0].transcript;
-        if (msg) {
-          msg.value = transcript;
-          // envia automaticamente após reconhecer
-          send();
-        }
+        msg.value = transcript; send();
       };
-
-      rec.onerror = (ev) => {
-        console.warn('STT erro:', ev.error || ev);
-        updateMicUI(false);
-      };
-
-      rec.onend = () => {
-        // encerrou (natural ou manual)
-        updateMicUI(false);
-      };
-
-      try { rec.start(); } catch(e) {
-        console.warn('Falha ao iniciar reconhecimento:', e);
-        updateMicUI(false);
-      }
+      rec.onerror = () => updateMicUI(false);
+      rec.onend   = () => updateMicUI(false);
+      try{ rec.start(); }catch(e){ console.warn('Falha ao iniciar reconhecimento:', e); updateMicUI(false); }
     }
-
     micBtn?.addEventListener('click', startDictation);
 
     // Mensagem inicial
@@ -291,9 +344,6 @@
   </script>
 </body>
 </html>
-
-
-
 
 
 
