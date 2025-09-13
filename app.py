@@ -18,13 +18,13 @@ OPENAI_EMBED_URL = "https://api.openai.com/v1/embeddings"
 # =========================
 
 DOCS_DIR = os.environ.get("DOCS_DIR", "docs")
-CHUNK_CHARS = 1800        # ~600-800 tokens em PT-BR (aprox.)
+CHUNK_CHARS = 1800
 CHUNK_OVERLAP = 200
-TOP_K = 4                 # quantos trechos trazer pro contexto
-SCORE_THRESHOLD = 0.78    # abaixo disso, consideramos "sem base"
-STRICT_MODE = True        # responde somente com base nos docs
+TOP_K = 6                 # aumentado para mais trechos
+SCORE_THRESHOLD = 0.70    # mais tolerante
+STRICT_MODE = True
 
-index = []  # cada item: {"text":..., "source":..., "embedding": np.array([...])}
+index = []
 
 def clean_text(t: str) -> str:
     t = t.replace("\r", "")
@@ -46,7 +46,6 @@ def chunk_text(text: str, src: str) -> list[dict]:
     i = 0
     while i < len(text):
         chunk = text[i:i+CHUNK_CHARS]
-        # tente quebrar no fim de parágrafo
         last_nl = chunk.rfind("\n")
         if last_nl > CHUNK_CHARS * 0.5:
             chunk = chunk[:last_nl]
@@ -67,7 +66,6 @@ def embed_texts(texts: list[str]) -> np.ndarray:
     r.raise_for_status()
     data = r.json()
     vecs = [np.array(d["embedding"], dtype=np.float32) for d in data["data"]]
-    # normalizar para coseno rápido
     vecs = [v / (np.linalg.norm(v) + 1e-10) for v in vecs]
     return np.vstack(vecs)
 
@@ -86,7 +84,7 @@ def build_index():
 def similarity_search(query: str, top_k: int = TOP_K):
     if not index:
         return []
-    q_vec = embed_texts([query])[0]  # já vem normalizado
+    q_vec = embed_texts([query])[0]
     sims = []
     for i, item in enumerate(index):
         sim = float(np.dot(q_vec, item["embedding"]))
@@ -97,17 +95,11 @@ def similarity_search(query: str, top_k: int = TOP_K):
         results.append({"score": sim, "text": index[i]["text"], "source": index[i]["source"]})
     return results
 
-# montar o “contexto” para o modelo
 def build_context(query: str):
     hits = similarity_search(query, TOP_K)
-    # filtra por limiar se estiver em modo estrito
     if STRICT_MODE:
         hits = [h for h in hits if h["score"] >= SCORE_THRESHOLD]
     return hits
-
-# =========================
-#  Prompt e Resposta
-# =========================
 
 SYSTEM_PROMPT = (
     "Você é um assistente do Programa Ciência e Gestão pela Educação (PCGE). "
@@ -116,8 +108,7 @@ SYSTEM_PROMPT = (
     "\"No momento, essa informação não está disponível nos documentos do PCGE.\"\n\n"
     "Regras:\n"
     "- Não invente dados; não use conhecimento externo.\n"
-    "- Cite trechos relevantes do CONTEXTO de forma natural (entre aspas) e mencione a fonte (nome do arquivo).\n"
-    "- Seja claro, objetivo e em português do Brasil.\n"
+    "- Responda em português do Brasil, de forma clara e objetiva.\n"
 )
 
 def make_user_prompt(user_msg: str, context_slices: list[dict]) -> str:
@@ -155,10 +146,6 @@ def call_openai_chat(messages):
     data = r.json()
     return data["choices"][0]["message"]["content"].strip()
 
-# =========================
-#  Rotas
-# =========================
-
 @app.route("/api/chat", methods=["POST"])
 def chat():
     data = request.get_json(silent=True) or {}
@@ -167,15 +154,12 @@ def chat():
     if not user_msg:
         return jsonify({"reply": "Por favor, envie uma pergunta."})
 
-    # (opcional) filtro de domínio para manter foco em Gestão Escolar/PCGE
     lower = user_msg.lower()
     allowed_keywords = ("escola", "gestão", "educação", "aluno", "professor", "pcge", "diretor", "sme", "unidade escolar")
     if STRICT_MODE and not any(k in lower for k in allowed_keywords):
         return jsonify({"reply": "Este canal responde apenas a temas do PCGE e de Gestão Escolar com base nos documentos fornecidos."})
 
     context_slices = build_context(user_msg)
-
-    # Se estrito e sem contexto suficiente, já responde a negativa padrão
     if STRICT_MODE and not context_slices:
         return jsonify({"reply": "No momento, essa informação não está disponível nos documentos do PCGE."})
 
@@ -189,13 +173,11 @@ def chat():
         reply = call_openai_chat(messages)
         return jsonify({"reply": reply})
     except Exception as e:
-        # log simplificado
         print("Erro OpenAI:", str(e))
         return jsonify({"reply": "Não consegui responder agora. Tente novamente em instantes."}), 200
 
 @app.route("/admin/reindex", methods=["POST", "GET"])
 def reindex():
-    # Endpoint simples para reconstruir o índice após atualizar arquivos em /docs
     try:
         build_index()
         return jsonify({"status": "ok", "chunks": len(index)})
@@ -206,11 +188,11 @@ def reindex():
 def health():
     return "OK", 200
 
-# constrói o índice ao subir
 build_index()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+
 
 
 
