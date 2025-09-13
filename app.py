@@ -21,7 +21,7 @@ DOCS_DIR = os.environ.get("DOCS_DIR", "docs")
 CHUNK_CHARS = 1800
 CHUNK_OVERLAP = 200
 TOP_K = 6
-SCORE_THRESHOLD = 0.60   # mais tolerante
+SCORE_THRESHOLD = 0.55   # ou 0.50 se quiser ainda mais tolerante
 STRICT_MODE = True
 
 index = []
@@ -97,9 +97,16 @@ def similarity_search(query: str, top_k: int = TOP_K):
 
 def build_context(query: str):
     hits = similarity_search(query, TOP_K)
+    if not hits:
+        return []
     if STRICT_MODE:
-        hits = [h for h in hits if h["score"] >= SCORE_THRESHOLD]
+        filtered = [h for h in hits if h["score"] >= SCORE_THRESHOLD]
+        if filtered:
+            return filtered
+        # Fallback: se nada passou do threshold, use os 3 melhores mesmo assim
+        return hits[:3]
     return hits
+
 
 SYSTEM_PROMPT = (
     "Você é um assistente do Programa Ciência e Gestão pela Educação (PCGE). "
@@ -201,6 +208,7 @@ build_index()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+
 
 
 
