@@ -20,8 +20,8 @@ OPENAI_EMBED_URL = "https://api.openai.com/v1/embeddings"
 DOCS_DIR = os.environ.get("DOCS_DIR", "docs")
 CHUNK_CHARS = 1800
 CHUNK_OVERLAP = 200
-TOP_K = 6                 # aumentado para mais trechos
-SCORE_THRESHOLD = 0.70    # mais tolerante
+TOP_K = 6                 # pega até 6 trechos
+SCORE_THRESHOLD = 0.60    # mais tolerante
 STRICT_MODE = True
 
 index = []
@@ -154,11 +154,6 @@ def chat():
     if not user_msg:
         return jsonify({"reply": "Por favor, envie uma pergunta."})
 
-    lower = user_msg.lower()
-    allowed_keywords = ("escola", "gestão", "educação", "aluno", "professor", "pcge", "diretor", "sme", "unidade escolar")
-    if STRICT_MODE and not any(k in lower for k in allowed_keywords):
-        return jsonify({"reply": "Este canal responde apenas a temas do PCGE e de Gestão Escolar com base nos documentos fornecidos."})
-
     context_slices = build_context(user_msg)
     if STRICT_MODE and not context_slices:
         return jsonify({"reply": "No momento, essa informação não está disponível nos documentos do PCGE."})
@@ -192,6 +187,8 @@ build_index()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+
+
 
 
 
