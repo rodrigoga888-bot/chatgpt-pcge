@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import os, json, glob, re
-import requests
+import os, glob, re, requests
 import numpy as np
 
 app = Flask(__name__)
@@ -13,19 +12,17 @@ OPENAI_EMBEDDING_MODEL = os.environ.get("OPENAI_EMBEDDING_MODEL", "text-embeddin
 OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions"
 OPENAI_EMBED_URL = "https://api.openai.com/v1/embeddings"
 
-# =========================
-#  RAG: Indexação de documentos
-# =========================
-
+# ===== Config RAG =====
 DOCS_DIR = os.environ.get("DOCS_DIR", "docs")
 CHUNK_CHARS = 1800
 CHUNK_OVERLAP = 200
-TOP_K = 12                # mais trechos
-SCORE_THRESHOLD = 0.40    # mais tolerante
+TOP_K = 16                 # pega mais trechos
+SCORE_THRESHOLD = 0.0      # sem bloqueio por limiar
 STRICT_MODE = True
 
 index = []
 
+# -------- Utils --------
 def clean_text(t: str) -> str:
     t = t.replace("\r", "")
     t = re.sub(r"[ \t]+", " ", t)
@@ -35,15 +32,18 @@ def clean_text(t: str) -> str:
 def load_docs() -> list[dict]:
     docs = []
     for path in glob.glob(os.path.join(DOCS_DIR, "*")):
-        if path.lower().endswith((".txt", ".md")) and not path.lower().startswith("readme"):
+        # ignora qualquer README
+        base = os.path.basename(path).lower()
+        if base.startswith("readme"):
+            continue
+        if path.lower().endswith((".txt", ".md")):
             with open(path, "r", encoding="utf-8", errors="ignore") as f:
                 text = clean_text(f.read())
                 docs.append({"source": os.path.basename(path), "text": text})
     return docs
 
 def chunk_text(text: str, src: str) -> list[dict]:
-    chunks = []
-    i = 0
+    chunks, i = [], 0
     while i < len(text):
         chunk = text[i:i+CHUNK_CHARS]
         last_nl = chunk.rfind("\n")
@@ -54,14 +54,8 @@ def chunk_text(text: str, src: str) -> list[dict]:
     return chunks
 
 def embed_texts(texts: list[str]) -> np.ndarray:
-    headers = {
-        "Authorization": f"Bearer {OPENAI_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "model": OPENAI_EMBEDDING_MODEL,
-        "input": texts
-    }
+    headers = {"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"}
+    payload = {"model": OPENAI_EMBEDDING_MODEL, "input": texts}
     r = requests.post(OPENAI_EMBED_URL, headers=headers, json=payload, timeout=60)
     r.raise_for_status()
     data = r.json()
@@ -81,10 +75,28 @@ def build_index():
     embeddings = embed_texts([p["text"] for p in parts])
     index = [{"text": p["text"], "source": p["source"], "embedding": e} for p, e in zip(parts, embeddings)]
 
+# -------- Busca com expansão de pergunta --------
+def expand_query(q: str) -> str:
+    q_low = q.lower()
+    extra = []
+    # sinônimos/variações simples
+    if "surg" in q_low:  # surgiu/surgimento
+        extra += ["criado", "origem", "início", "fundado", "começou", "quando foi criado"]
+    if "metodolog" in q_low:  # metodologia
+        extra += ["abordagem", "método", "modelo", "como funciona", "estratégias", "como é feito"]
+    if "pcge" not in q_low:
+        extra += ["PCGE", "Programa Ciência e Gestão pela Educação"]
+    if "programa" in q_low and "pcge" not in q_low:
+        extra += ["programa PCGE"]
+    # junta tudo numa consulta expandida
+    if extra:
+        q = q + " | " + " ; ".join(extra)
+    return q
+
 def similarity_search(query: str, top_k: int = TOP_K):
     if not index:
         return []
-    q_vec = embed_texts([query])[0]
+    q_vec = embed_texts([expand_query(query)])[0]
     sims = []
     for i, item in enumerate(index):
         sim = float(np.dot(q_vec, item["embedding"]))
@@ -100,21 +112,20 @@ def build_context(query: str):
     if not hits:
         return []
     if STRICT_MODE:
+        # mantém filtro, mas com limiar 0.0 sempre passa; fica aqui caso você queira subir depois
         filtered = [h for h in hits if h["score"] >= SCORE_THRESHOLD]
-        if filtered:
-            return filtered
-        # fallback: se nada passou, pega os 3 melhores
-        return hits[:3]
+        return filtered if filtered else hits[:TOP_K]
     return hits
 
+# -------- Prompt --------
 SYSTEM_PROMPT = (
     "Você é um assistente do Programa Ciência e Gestão pela Educação (PCGE). "
-    "Responda SOMENTE com base nos trechos de CONTEXTO fornecidos. "
-    "Se a pergunta não tiver suporte suficiente, diga educadamente: "
+    "Use SEMPRE o que estiver disponível no CONTEXTO para responder, mesmo que os trechos não tragam todos os detalhes. "
+    "Somente se não houver NENHUM trecho no CONTEXTO, diga: "
     "\"No momento, essa informação não está disponível nos documentos do PCGE.\"\n\n"
     "Regras:\n"
     "- Não invente dados; não use conhecimento externo.\n"
-    "- Responda em português do Brasil, de forma clara e objetiva.\n"
+    "- Responda em português do Brasil, com clareza e objetividade.\n"
 )
 
 def make_user_prompt(user_msg: str, context_slices: list[dict]) -> str:
@@ -125,38 +136,28 @@ def make_user_prompt(user_msg: str, context_slices: list[dict]) -> str:
         for i, h in enumerate(context_slices, start=1):
             parts.append(f"[Trecho {i} | fonte: {h['source']} | score: {h['score']:.2f}]\n{h['text']}\n")
         contexto = "\n".join(parts)
-
-    prompt = (
+    return (
         f"PERGUNTA DO USUÁRIO:\n{user_msg}\n\n"
         f"CONTEXTO (trechos dos documentos):\n{contexto}\n\n"
         "INSTRUÇÕES AO ASSISTENTE:\n"
         "- Responda somente com base no CONTEXTO acima.\n"
-        "- Se não houver base suficiente, diga: "
-        "\"No momento, essa informação não está disponível nos documentos do PCGE.\""
+        "- Se algum ponto não estiver no CONTEXTO, não invente: apenas explique com o que há disponível.\n"
     )
-    return prompt
 
+# -------- OpenAI --------
 def call_openai_chat(messages):
-    headers = {
-        "Authorization": f"Bearer {OPENAI_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "model": MODEL_ID,
-        "messages": messages,
-        "temperature": 0.2,
-        "max_tokens": 700
-    }
+    headers = {"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"}
+    payload = {"model": MODEL_ID, "messages": messages, "temperature": 0.2, "max_tokens": 700}
     r = requests.post(OPENAI_CHAT_URL, headers=headers, json=payload, timeout=60)
     r.raise_for_status()
     data = r.json()
     return data["choices"][0]["message"]["content"].strip()
 
+# -------- Endpoints --------
 @app.route("/api/chat", methods=["POST"])
 def chat():
     data = request.get_json(silent=True) or {}
     user_msg = (data.get("message") or "").strip()
-
     if not user_msg:
         return jsonify({"reply": "Por favor, envie uma pergunta."})
 
@@ -165,11 +166,8 @@ def chat():
         return jsonify({"reply": "No momento, essa informação não está disponível nos documentos do PCGE."})
 
     user_prompt = make_user_prompt(user_msg, context_slices)
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": user_prompt}
-    ]
-
+    messages = [{"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt}]
     try:
         reply = call_openai_chat(messages)
         return jsonify({"reply": reply})
@@ -199,6 +197,8 @@ build_index()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+
+
 
 
 
