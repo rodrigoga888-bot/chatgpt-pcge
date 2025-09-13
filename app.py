@@ -21,7 +21,7 @@ DOCS_DIR = os.environ.get("DOCS_DIR", "docs")
 CHUNK_CHARS = 1800
 CHUNK_OVERLAP = 200
 TOP_K = 12                # mais trechos
-SCORE_THRESHOLD = 0.50    # mais tolerante
+SCORE_THRESHOLD = 0.40    # mais tolerante
 STRICT_MODE = True
 
 index = []
@@ -199,6 +199,7 @@ build_index()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+
 
 
 
