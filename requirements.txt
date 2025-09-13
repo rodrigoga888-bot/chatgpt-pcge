@@ -2,3 +2,5 @@ flask
 flask-cors
 requests
 gunicorn
+numpy==1.26.4
+
