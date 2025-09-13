@@ -20,8 +20,8 @@ OPENAI_EMBED_URL = "https://api.openai.com/v1/embeddings"
 DOCS_DIR = os.environ.get("DOCS_DIR", "docs")
 CHUNK_CHARS = 1800
 CHUNK_OVERLAP = 200
-TOP_K = 6                 # pega até 6 trechos
-SCORE_THRESHOLD = 0.60    # mais tolerante
+TOP_K = 6
+SCORE_THRESHOLD = 0.60   # mais tolerante
 STRICT_MODE = True
 
 index = []
@@ -179,6 +179,15 @@ def reindex():
     except Exception as e:
         return jsonify({"status": "error", "detail": str(e)}), 500
 
+# =========================
+#  Endpoint de DEBUG
+# =========================
+@app.route("/debug/search", methods=["GET"])
+def debug_search():
+    q = request.args.get("q", "")
+    hits = similarity_search(q, TOP_K)
+    return jsonify(hits)
+
 @app.route("/")
 def health():
     return "OK", 200
@@ -187,6 +196,7 @@ build_index()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+
 
 
 
