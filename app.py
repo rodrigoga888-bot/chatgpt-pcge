@@ -166,7 +166,12 @@ def chat():
 
     try:
         reply = call_openai_chat(messages)
-        return jsonify({"reply": reply})
+        return jsonify({
+            "reply": reply,
+            "debug_context": [h["source"] for h in context_slices],
+            "debug_scores": [h["score"] for h in context_slices]
+        })
+
     except Exception as e:
         print("Erro OpenAI:", str(e))
         return jsonify({"reply": "Não consegui responder agora. Tente novamente em instantes."}), 200
@@ -196,6 +201,7 @@ build_index()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+
 
 
 
