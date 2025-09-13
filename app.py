@@ -79,16 +79,36 @@ def build_index():
 def expand_query(q: str) -> str:
     q_low = q.lower()
     extra = []
-    # sinônimos/variações simples
-    if "surg" in q_low:  # surgiu/surgimento
-        extra += ["criado", "origem", "início", "fundado", "começou", "quando foi criado"]
-    if "metodolog" in q_low:  # metodologia
-        extra += ["abordagem", "método", "modelo", "como funciona", "estratégias", "como é feito"]
+
+    # --- Origem / História ---
+    if "surg" in q_low or "histór" in q_low or "início" in q_low:
+        extra += ["criação", "origem", "fundação", "como começou", "quando foi criado"]
+
+    # --- Metodologia / Estratégia ---
+    if "metodolog" in q_low or "estratég" in q_low or "modelo" in q_low:
+        extra += ["abordagem", "método", "plano", "forma de atuação", "como funciona"]
+
+    # --- Objetivos ---
+    if "objetiv" in q_low or "finalidade" in q_low or "propós" in q_low or "meta" in q_low:
+        extra += ["propósito", "missão", "metas", "finalidade"]
+
+    # --- Práticas / Ações ---
+    if "prátic" in q_low or "ação" in q_low or "iniciativa" in q_low or "medida" in q_low:
+        extra += ["atividades", "procedimentos", "recomendações"]
+
+    # --- Resultados / Impacto ---
+    if "result" in q_low or "impact" in q_low or "desempenho" in q_low or "efeito" in q_low:
+        extra += ["melhoria", "avanços", "benefícios", "consequências"]
+
+    # --- PCGE explicitado ---
     if "pcge" not in q_low:
         extra += ["PCGE", "Programa Ciência e Gestão pela Educação"]
+
+    # --- Programa (quando genérico) ---
     if "programa" in q_low and "pcge" not in q_low:
         extra += ["programa PCGE"]
-    # junta tudo numa consulta expandida
+
+    # Junta tudo numa consulta expandida
     if extra:
         q = q + " | " + " ; ".join(extra)
     return q
@@ -197,6 +217,7 @@ build_index()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+
 
 
 
